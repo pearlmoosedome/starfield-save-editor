@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starfield Save Editor — Edit .sfs Saves on Windows</title>
+<meta name="description" content="Starfield Save Editor lets you respec skills, set credits, unlock traits, edit ship inventory, spawn items, and back up characters before writing.">
+<style>
+  :root{
+    --bg-deep:#070912;
+    --bg-navy:#0b1024;
+    --bg-indigo:#131a3a;
+    --accent:#6c8cff;
+    --accent-2:#a06bff;
+    --accent-3:#38e1c4;
+    --text:#e8ecff;
+    --muted:#9aa3c7;
+    --card:rgba(22,28,54,.72);
+    --card-border:rgba(120,140,220,.16);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 700px at 12% -10%, rgba(108,140,255,.20), transparent 60%),
+      radial-gradient(1000px 600px at 90% 0%, rgba(160,107,255,.16), transparent 55%),
+      radial-gradient(900px 700px at 50% 110%, rgba(56,225,196,.10), transparent 60%),
+      linear-gradient(170deg, #070912 0%, #0b1024 32%, #101634 62%, #0a0e1f 100%);
+    background-attachment:fixed;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(16px) saturate(160%);
+    -webkit-backdrop-filter:blur(16px) saturate(160%);
+    background:rgba(10,14,32,.62);
+    border-bottom:1px solid rgba(120,140,220,.14);
+  }
+  .nav-inner{
+    max-width:1120px;margin:0 auto;padding:14px 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.02rem;letter-spacing:.2px}
+  .brand .logo{
+    width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    box-shadow:0 0 18px rgba(108,140,255,.45);
+    font-size:15px;
+  }
+  .brand span.hl{
+    background:linear-gradient(90deg,#c9d4ff,#8fa8ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .nav-links{display:flex;gap:28px;list-style:none}
+  .nav-links a{
+    color:var(--muted);text-decoration:none;font-size:.92rem;font-weight:500;
+    transition:color .18s ease;
+  }
+  .nav-links a:hover{color:#fff}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    border-radius:11px;font-weight:600;text-decoration:none;cursor:pointer;
+    border:1px solid transparent;transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:#fff;padding:11px 20px;font-size:.92rem;
+    box-shadow:0 8px 26px rgba(108,140,255,.35);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(108,140,255,.5)}
+  .btn-ghost{
+    background:rgba(255,255,255,.03);color:var(--text);
+    border-color:rgba(150,165,225,.28);padding:11px 20px;font-size:.92rem;
+  }
+  .btn-ghost:hover{background:rgba(255,255,255,.08);border-color:rgba(150,165,225,.5);transform:translateY(-2px)}
+  .nav .btn-primary{padding:9px 18px;font-size:.86rem}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:88px 0 76px;text-align:center;position:relative}
+  .pill{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:.78rem;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+    color:#c3cdf7;padding:7px 15px;border-radius:999px;
+    background:rgba(108,140,255,.10);
+    border:1px solid rgba(120,140,220,.3);
+    box-shadow:inset 0 0 22px rgba(108,140,255,.10);
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-3);box-shadow:0 0 10px var(--accent-3)}
+  h1{
+    font-size:clamp(2.2rem,5.4vw,4rem);
+    line-height:1.08;letter-spacing:-1.4px;font-weight:800;
+    margin:26px auto 0;max-width:900px;
+    background:linear-gradient(100deg,#ffffff 8%,#b9c8ff 45%,#a06bff 78%,#38e1c4 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p.lead{
+    max-width:660px;margin:22px auto 0;color:var(--muted);font-size:1.06rem;
+  }
+  .hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+  .hero-actions .btn-primary{padding:15px 30px;font-size:1rem;border-radius:13px}
+  .hero-actions .btn-ghost{padding:15px 28px;font-size:1rem;border-radius:13px}
+
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+    margin:52px auto 0;max-width:860px;
+  }
+  .stat{
+    background:var(--card);border:1px solid var(--card-border);border-radius:14px;
+    padding:16px 12px;text-align:center;backdrop-filter:blur(8px);
+  }
+  .stat .k{font-size:1.02rem;font-weight:700;color:#fff;display:block}
+  .stat .v{font-size:.74rem;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:3px;display:block}
+
+  /* ---------- SECTION HEADERS ---------- */
+  section{padding:72px 0}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 46px}
+  .sec-head .eyebrow{
+    font-size:.74rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+    color:#8fa8ff;display:block;margin-bottom:12px;
+  }
+  .sec-head h2{font-size:clamp(1.6rem,3.4vw,2.3rem);letter-spacing:-.7px;font-weight:800}
+  .sec-head p{color:var(--muted);margin-top:12px;font-size:.98rem}
+
+  /* ---------- FEATURES ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .card{
+    position:relative;background:var(--card);border:1px solid var(--card-border);
+    border-radius:var(--radius);padding:26px 22px 24px;
+    backdrop-filter:blur(10px);
+    transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2),var(--accent-3));
+    opacity:.9;
+  }
+  .card:hover{
+    transform:translateY(-6px);
+    border-color:rgba(140,160,255,.4);
+    box-shadow:0 18px 40px rgba(5,8,22,.7),0 0 0 1px rgba(120,140,220,.12) inset;
+  }
+  .card .ico{
+    width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:22px;
+    background:rgba(108,140,255,.10);border:1px solid rgba(120,140,220,.22);
+    margin-bottom:16px;
+  }
+  .card h3{font-size:1.03rem;font-weight:700;margin-bottom:8px;letter-spacing:-.2px}
+  .card p{color:var(--muted);font-size:.9rem;line-height:1.62}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{max-width:720px;margin:0 auto;position:relative;padding-left:8px}
+  .steps::before{
+    content:"";position:absolute;left:25px;top:14px;bottom:14px;width:2px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2) 55%,var(--accent-3));
+    border-radius:2px;opacity:.75;
+  }
+  .step{position:relative;padding:0 0 38px 74px}
+  .step:last-child{padding-bottom:0}
+  .step .num{
+    position:absolute;left:0;top:0;width:50px;height:50px;border-radius:50%;
+    display:grid;place-items:center;font-weight:800;font-size:1.02rem;
+    background:linear-gradient(135deg,#111a3c,#1a2450);
+    border:1px solid rgba(140,160,255,.4);
+    box-shadow:0 0 0 5px rgba(10,14,32,.9),0 0 22px rgba(108,140,255,.28);
+    color:#dfe6ff;
+  }
+  .step h3{font-size:1.06rem;font-weight:700;margin-bottom:6px;padding-top:6px}
+  .step p{color:var(--muted);font-size:.93rem}
+
+  /* ---------- FAQ ---------- */
+  .faq{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  details{
+    background:var(--card);border:1px solid var(--card-border);border-radius:13px;
+    overflow:hidden;transition:border-color .2s ease,background .2s ease;
+  }
+  details[open]{border-color:rgba(140,160,255,.38);background:rgba(26,33,64,.8)}
+  summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:18px 20px;font-weight:600;font-size:.97rem;color:#e3e9ff;
+    user-select:none;
+  }
+  summary::-webkit-details-marker{display:none}
+  .plus{
+    flex:0 0 auto;position:relative;width:20px;height:20px;
+    transition:transform .25s ease;
+  }
+  .plus::before,.plus::after{
+    content:"";position:absolute;background:#8fa8ff;border-radius:2px;
+    top:50%;left:50%;transform:translate(-50%,-50%);
+  }
+  .plus::before{width:14px;height:2px}
+  .plus::after{width:2px;height:14px;transition:opacity .2s ease,transform .25s ease}
+  details[open] .plus{transform:rotate(45deg)}
+  details[open] .plus::after{opacity:0}
+  details .answer{padding:0 20px 20px;color:var(--muted);font-size:.9rem;line-height:1.68}
+
+  /* ---------- CTA BANNER ---------- */
+  .cta-banner{
+    position:relative;overflow:hidden;border-radius:22px;
+    border:1px solid rgba(140,160,255,.26);
+    background:linear-gradient(140deg,rgba(24,32,66,.92),rgba(15,20,44,.92));
+    padding:58px 34px;text-align:center;
+    box-shadow:0 24px 60px rgba(4,7,20,.7);
+  }
+  .cta-banner::before{
+    content:"";position:absolute;inset:-40% -10% auto;height:340px;
+    background:radial-gradient(closest-side,rgba(108,140,255,.42),transparent 72%);
+    filter:blur(6px);pointer-events:none;
+  }
+  .cta-banner::after{
+    content:"";position:absolute;left:50%;bottom:-160px;width:520px;height:320px;transform:translateX(-50%);
+    background:radial-gradient(closest-side,rgba(160,107,255,.28),transparent 70%);
+    pointer-events:none;
+  }
+  .cta-banner > *{position:relative;z-index:1}
+  .cta-banner h2{font-size:clamp(1.6rem,3.6vw,2.4rem);font-weight:800;letter-spacing:-.8px}
+  .cta-banner p{color:var(--muted);max-width:520px;margin:14px auto 28px;font-size:.98rem}
+  .cta-banner .btn-primary{padding:15px 34px;font-size:1rem;border-radius:13px}
+  .cta-note{display:block;margin-top:16px;font-size:.76rem;color:#7f89b0;letter-spacing:.4px}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:1px solid rgba(120,140,220,.14);
+    padding:34px 0 40px;margin-top:20px;
+  }
+  .foot-inner{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    font-size:.86rem;color:var(--muted);
+  }
+  .foot-inner a{color:#a9b7f5;text-decoration:none;font-weight:600}
+  .foot-inner a:hover{color:#fff;text-decoration:underline}
+  .foot-brand{display:flex;align-items:center;gap:9px;font-weight:700;color:#dfe6ff}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:900px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:640px){
+    .nav-links{display:none}
+    .nav-inner{padding:12px 18px}
+    .hero{padding:60px 0 54px}
+    .hero-actions .btn{width:100%;max-width:320px}
+    .grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr 1fr;gap:10px}
+    section{padding:52px 0}
+    .steps::before{left:22px}
+    .step{padding-left:64px}
+    .step .num{width:44px;height:44px;font-size:.95rem}
+    .cta-banner{padding:44px 22px}
+    .foot-inner{flex-direction:column;text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <div class="logo">✦</div>
+      <span>Starfield <span class="hl">Save Editor</span></span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a class="btn btn-primary" href="https://gitscore.cc">Download</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="pill"><span class="dot"></span>Starfield Save Editor · starfield-save-editor</span>
+    <h1>Rewrite your Starfield character, one .sfs save at a time</h1>
+    <p class="lead">
+      A Windows desktop tool for Starfield save files. Respec skills, set credits, unlock traits,
+      edit ship inventory, spawn items, and automatically back up characters before anything is written.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://gitscore.cc">⬇ Download for Windows</a>
+      <a class="btn btn-ghost" href="https://gitscore.cc">View on GitHub</a>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span class="k">48,200+</span><span class="v">Downloads</span></div>
+      <div class="stat"><span class="k">v2.4.1</span><span class="v">Latest version</span></div>
+      <div class="stat"><span class="k">Windows 10 / 11</span><span class="v">Platform</span></div>
+      <div class="stat"><span class="k">Free &amp; open source</span><span class="v">License</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Features</span>
+      <h2>Everything you need to edit a Starfield save</h2>
+      <p>Built for players who want precise control over their character, ship, and inventory without starting a new game.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="ico">🧠</div>
+        <h3>Respec skills</h3>
+        <p>Refund and reassign skill points across the Starfield skill tree. Rebuild your character build without grinding XP again.</p>
+      </div>
+      <div class="card">
+        <div class="ico">💰</div>
+        <h3>Set credits</h3>
+        <p>Edit your credit balance directly in the .sfs file. Fund a new ship, buy out a vendor, or reset your economy to zero.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🔓</div>
+        <h3>Unlock traits</h3>
+        <p>Toggle character traits on and off, including background and faction traits, then save the result back to your character.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🚀</div>
+        <h3>Edit ship inventory</h3>
+        <p>Browse and modify cargo holds on your ships. Add, remove, and adjust quantities of stored resources and gear.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📦</div>
+        <h3>Spawn items</h3>
+        <p>Search the Starfield item database and inject items into your inventory or cargo hold with the correct form IDs.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🛡️</div>
+        <h3>Automatic backups</h3>
+        <p>Every character is backed up before writing. Restore a previous save instantly if an edit doesn't go the way you planned.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps from save file to edited character</h2>
+      <p>No mod managers, no console commands — just point the editor at your save and go.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Locate your .sfs save</h3>
+        <p>Open the editor and select a character from your Starfield saves folder, or browse to any .sfs file manually.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Edit skills, credits, traits, and inventory</h3>
+        <p>Use the tabs to respec skills, set credits, unlock traits, edit ship inventory, or spawn items from the item database.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Back up, then write the save</h3>
+        <p>Confirm the changes. The editor creates a backup of the original character before writing the updated .sfs file.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">FAQ</span>
+      <h2>Questions about the Starfield Save Editor</h2>
+      <p>Quick answers before you download and edit your first save.</p>
+    </div>
+
+    <div class="faq">
+      <details>
+        <summary>Which Starfield save files does the editor support?<span class="plus"></span></summary>
+        <div class="answer">The editor works with Starfield <strong>.sfs</strong> character saves on Windows. It reads the character, skill, trait, credit, ship inventory, and item data stored in the save, and writes changes back to the same format after creating a backup.</div>
+      </details>
+      <details>
+        <summary>Can I undo an edit if something goes wrong?<span class="plus"></span></summary>
+        <div class="answer">Yes. Before writing any changes, the editor automatically backs up the original character file. If an edit causes problems, you can restore the backup from inside the tool or copy it back into your saves folder manually.</div>
+      </details>
+      <details>
+        <summary>Do I need to install mods or a mod manager?<span class="plus"></span></summary>
+        <div class="answer">No. starfield-save-editor is a standalone Windows application. It edits the save file directly, so you don't need a mod manager, script extender, or console commands to respec skills, set credits, unlock traits, or spawn items.</div>
+      </details>
+      <details>
+        <summary>Is the Starfield Save Editor free?<span class="plus"></span></summary>
+        <div class="answer">Yes — it is free and open source. You can download the latest Windows build from the project page, and the source code is available on GitHub for review and contributions.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="cta-banner">
+      <h2>Take control of your Starfield playthrough</h2>
+      <p>Download the Starfield Save Editor for Windows and reshape your character, ship, and inventory in minutes.</p>
+      <a class="btn btn-primary" href="https://gitscore.cc">⬇ Download Starfield Save Editor</a>
+      <span class="cta-note">Windows 10 / 11 · v2.4.1 · Free &amp; open source</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div class="foot-brand"><span>✦</span> Starfield Save Editor</div>
+    <div>© 2024 starfield-save-editor. Not affiliated with Bethesda Game Studios.</div>
+    <div><a href="https://gitscore.cc">GitHub Repository</a></div>
+  </div>
+</footer>
+
+</body>
+</html>
